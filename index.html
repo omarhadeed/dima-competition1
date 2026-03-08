@@ -1,0 +1,1283 @@
+لقد قمت بتحديث الكود وحل المشاكل التي ذكرتها:
+
+1.  **حفظ الموسيقى والإعدادات**: تم تعديل الكود ليقوم بحماية الإعدادات القديمة (مثل الموسيقى والصور) عند الضغط على زر "حفظ الإعدادات". كما أضفت **تنبيهاً هاماً** يظهر لك إذا كان حجم الملف (صورة أو صوت) كبيراً جداً بحيث يمنع المتصفح من حفظه، لأن المتصفحات لها سعة محدودة للتخزين (حوالي 5-10 ميجابايت). إذا ظهر لك تنبيه "Storage Full"، يجب اختيار ملفات أصغر حجماً.
+2.  **صورة البنت (Avatar)**: تم ضبط `z-index` لتكون صورة البنت الشخصية (العائمة في الأسفل) **فوق** صورة الولد الزينة (على الجانب) دائماً.
+3.  **إصلاح ظهور النص**: المشكلة التي ظهرت لك ("girl avatar" تتحرك) سببها أن رابط الصورة القديم قد تعطل. قمت بتحديث الروابط لتكون أكثر موثوقية، وأضفت كوداً لإخفاء النص البديل (Alt text) ليظهر مكان الصورة فارغاً نظيفاً إذا لم يتم تحميلها، بدلاً من ظهور الكتابة المشوهة.
+
+إليك الكود المحدث:
+
+```html
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مسابقة متجر ديمة</title>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            direction: rtl;
+            font-family: 'Tajawal', sans-serif;
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+            background: linear-gradient(180deg, #0a0a1f 0%, #1a0a2e 50%, #0f1a30 100%);
+            color: #333;
+        }
+
+        /* الخلفية والنجوم */
+        .stars {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .star {
+            position: absolute;
+            background: #fff;
+            border-radius: 50%;
+            animation: twinkle 2s ease-in-out infinite;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.2); }
+        }
+
+        /* صور الأولاد (خلفية) */
+        .kids-bg-image {
+            position: fixed;
+            bottom: 0;
+            height: auto;
+            z-index: 1; /* مستوى منخفض */
+            pointer-events: none;
+            filter: drop-shadow(0 -10px 30px rgba(255, 200, 100, 0.3));
+            transition: width 0.3s;
+        }
+
+        .kids-left { left: 0; width: 20%; max-width: 350px; min-width: 150px; opacity: 0.9; }
+        .kids-right { right: 0; width: 20%; max-width: 350px; min-width: 150px; opacity: 0.9; }
+
+        /* الحاوية الرئيسية */
+        .main-container {
+            position: relative;
+            z-index: 10;
+            padding: 20px;
+            padding-bottom: 120px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        /* الشعار */
+        .store-logo {
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .logo-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            perspective: 1000px;
+        }
+
+        .side-logo {
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            border: 4px solid #FFD700;
+            box-shadow: 0 0 25px rgba(255, 215, 0, 0.6);
+            object-fit: cover;
+            animation: logoFloat 4s ease-in-out infinite;
+            transform-style: preserve-3d;
+        }
+
+        .main-title-wrapper {
+            position: relative;
+            display: inline-block;
+        }
+
+        .store-logo h1 {
+            font-size: 48px;
+            font-weight: 900;
+            color: transparent;
+            background: linear-gradient(135deg, #FFD700, #FFF, #FFA500);
+            -webkit-background-clip: text;
+            background-clip: text;
+            text-shadow: 0 5px 15px rgba(255, 215, 0, 0.4);
+            animation: textGlow 2s ease-in-out infinite alternate;
+        }
+
+        .store-logo .subtitle {
+            font-size: 20px;
+            color: #e0e0e0;
+            letter-spacing: 1px;
+        }
+
+        @keyframes logoFloat {
+            0%, 100% { transform: translateY(0) rotateY(0deg); }
+            50% { transform: translateY(-15px) rotateY(15deg); }
+        }
+
+        @keyframes textGlow {
+            from { filter: drop-shadow(0 0 5px #FFD700); }
+            to { filter: drop-shadow(0 0 20px #FFF); transform: scale(1.02); }
+        }
+
+        /* شريط الحالة */
+        .status-bar {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+            width: 100%;
+        }
+
+        .status-item {
+            background: rgba(255,255,255,0.1);
+            padding: 10px 25px;
+            border-radius: 30px;
+            color: #fff;
+            font-weight: 700;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255,255,255,0.2);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .day-badge {
+            background: #FFD700;
+            color: #000;
+            padding: 2px 10px;
+            border-radius: 10px;
+            margin-right: 5px;
+        }
+
+        /* البطاقات */
+        .cards-layout {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+            width: 100%;
+            max-width: 1200px;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            max-width: 450px;
+            width: 100%;
+            padding: 25px;
+            border-radius: 25px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.4);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card-title {
+            text-align: center;
+            font-size: 26px;
+            font-weight: 900;
+            color: #1a1a2e;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+        }
+
+        /* زر كتم الصوت للمستخدم */
+        .audio-control-btn {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            background: #fff;
+            border: 2px solid #ddd;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            z-index: 10;
+            transition: all 0.3s;
+        }
+        .audio-control-btn:hover { background: #f0f0f0; transform: scale(1.1); }
+        .audio-control-btn.playing { border-color: #4CAF50; background: #e8f5e9; }
+
+        /* لوحة الآدمن */
+        .admin-panel {
+            background: rgba(255, 235, 59, 0.15);
+            border: 2px solid #FFD700;
+            max-width: 500px;
+        }
+
+        .admin-header {
+            background: linear-gradient(135deg, #FFD700, #FFA500);
+            color: #000;
+            padding: 10px;
+            border-radius: 15px;
+            text-align: center;
+            margin-bottom: 15px;
+            font-weight: 900;
+        }
+
+        .admin-section {
+            background: rgba(255,255,255,0.5);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .admin-section-title {
+            font-weight: 900;
+            color: #1a1a2e;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #ccc;
+            padding-bottom: 5px;
+        }
+
+        .admin-grid {
+            display: grid;
+            gap: 15px;
+        }
+
+        .admin-input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .admin-input-group label {
+            font-weight: 700;
+            font-size: 14px;
+            color: #333;
+        }
+
+        .admin-input-group input[type="text"],
+        .admin-input-group input[type="number"],
+        .admin-input-group input[type="email"] {
+            width: 100%;
+            padding: 8px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            text-align: center;
+            font-family: inherit;
+            font-weight: 700;
+        }
+        
+        .admin-input-hint {
+            font-size: 11px;
+            color: #d32f2f; /* لون أحمر للتنبيه */
+            font-weight: bold;
+            margin-top: 5px;
+        }
+
+        .admin-btn {
+            padding: 10px;
+            border: none;
+            border-radius: 8px;
+            font-family: inherit;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.2s, opacity 0.2s;
+            width: 100%;
+            font-size: 16px;
+        }
+
+        .admin-btn:hover { transform: scale(1.02); opacity: 0.9; }
+        
+        .btn-save { background: #4CAF50; color: white; }
+        .btn-reset { background: #f44336; color: white; margin-top: 10px; }
+        .btn-reset-soft { background: #FF9800; color: white; margin-top: 10px; }
+        .btn-upload { background: #2196F3; color: white; margin-top: 5px; font-size: 14px; }
+        .btn-test { background: #9C27B0; color: white; margin-top: 15px; font-size: 18px; padding: 15px; }
+        .btn-preview { background: #00BCD4; color: white; margin-top: 10px; }
+
+        /* النماذج */
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: 700; }
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 16px;
+            font-family: 'Tajawal', sans-serif;
+            transition: border-color 0.3s;
+        }
+        .form-group input:focus { border-color: #FFD700; outline: none; }
+        .error-msg { color: #f44336; font-size: 12px; margin-top: 5px; display: none; }
+
+        .user-welcome {
+            background: #e8f5e9;
+            padding: 10px 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .admin-welcome {
+            background: #f3e5f5;
+            border: 1px solid #9C27B0;
+        }
+        .user-email { font-weight: 700; color: #2e7d32; font-size: 14px; }
+        .logout-btn {
+            background: #ef5350;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: inherit;
+            font-weight: 700;
+        }
+        .back-btn {
+            background: #9C27B0;
+        }
+
+        /* زر العودة للآدمن (عائم) */
+        .admin-back-float {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 999;
+            background: #FFD700;
+            color: #000;
+            padding: 10px 20px;
+            border-radius: 50px;
+            font-weight: 900;
+            border: none;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            cursor: pointer;
+            display: none;
+        }
+
+        /* العجلة */
+        .wheel-wrapper { display: flex; flex-direction: column; align-items: center; }
+        .wheel-container {
+            position: relative;
+            width: 260px;
+            height: 260px;
+            margin: 20px auto;
+        }
+        .wheel-frame {
+            position: absolute;
+            top: -10px; left: -10px;
+            width: 280px; height: 280px;
+            border-radius: 50%;
+            border: 10px solid #FFD700;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+            z-index: 1;
+        }
+        #wheel {
+            width: 100%; height: 100%;
+            border-radius: 50%;
+            position: relative;
+            overflow: hidden;
+            transition: transform 5s cubic-bezier(0.17, 0.67, 0.12, 0.99);
+            z-index: 2;
+        }
+        .section-win {
+            position: absolute; top: 0; left: 0; width: 100%; height: 50%;
+            background: linear-gradient(135deg, #FFD700, #FFC107);
+            clip-path: polygon(50% 100%, 0 0, 100% 0);
+            display: flex; justify-content: center; padding-top: 30px;
+        }
+        .section-try {
+            position: absolute; bottom: 0; left: 0; width: 100%; height: 50%;
+            background: linear-gradient(135deg, #E91E63, #C2185B);
+            clip-path: polygon(50% 0, 0 100%, 100% 100%);
+            display: flex; justify-content: center; align-items: flex-end; padding-bottom: 30px;
+        }
+        .wheel-text { font-weight: 900; font-size: 22px; color: #fff; text-shadow: 1px 1px 3px rgba(0,0,0,0.3); }
+        .section-win .wheel-text { color: #5D4037; }
+        .wheel-center {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 50px; height: 50px; background: white; border-radius: 50%; z-index: 3;
+            box-shadow: 0 0 10px rgba(0,0,0,0.2); display: flex; align-items: center; justify-content: center; font-size: 24px;
+        }
+        #pointer {
+            position: absolute; top: -20px; left: 50%; transform: translateX(-50%); z-index: 4;
+            width: 0; height: 0; border-left: 15px solid transparent; border-right: 15px solid transparent; border-top: 30px solid #E91E63;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+        }
+        .spin-btn {
+            display: block; width: 100%; margin-top: 20px; padding: 15px;
+            font-size: 24px; font-weight: 900; font-family: 'Tajawal', sans-serif;
+            color: #fff; background: linear-gradient(135deg, #E91E63, #FF4081);
+            border: none; border-radius: 15px; cursor: pointer;
+            box-shadow: 0 5px 15px rgba(233, 30, 99, 0.4); transition: transform 0.2s;
+        }
+        .spin-btn:hover:not(:disabled) { transform: scale(1.02); }
+        .spin-btn:disabled { background: #ccc; cursor: not-allowed; transform: none; }
+
+        .result-box {
+            margin-top: 20px; padding: 15px; border-radius: 10px; text-align: center;
+            font-weight: 700; font-size: 18px; background: #f5f5f5; border: 2px dashed #ccc;
+        }
+        .result-box.win { background: #fff3cd; border-color: #FFD700; color: #856404; }
+        .result-box.lose { background: #fce4ec; border-color: #E91E63; color: #880e4f; }
+
+        /* الروابط */
+        .links-section { margin-top: 20px; text-align: center; border-top: 1px solid #eee; padding-top: 15px; }
+        .links-section p { font-weight: 700; margin-bottom: 10px; color: #333; }
+        .social-links { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
+        .social-link {
+            display: inline-flex; align-items: center; gap: 5px; padding: 8px 15px;
+            color: white; text-decoration: none; border-radius: 20px;
+            font-size: 14px; font-weight: 700; transition: opacity 0.2s;
+        }
+        .social-link:hover { opacity: 0.8; }
+        .whatsapp { background: #25D366; }
+        .facebook { background: #1877F2; }
+        .instagram { background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #bc1888); }
+
+        /* لوحة القوائم */
+        .lists-panel { background: rgba(255, 255, 255, 0.95); max-width: 450px; width: 100%; padding: 20px; border-radius: 25px; box-shadow: 0 15px 40px rgba(0,0,0,0.4); }
+        .panel-title { text-align: center; font-size: 24px; font-weight: 900; color: #1a1a2e; margin-bottom: 15px; }
+        .tabs { display: flex; margin-bottom: 15px; border-radius: 10px; overflow: hidden; border: 2px solid #eee; }
+        .tab-btn { flex: 1; padding: 10px; background: #f5f5f5; border: none; font-family: inherit; font-weight: 700; cursor: pointer; transition: background 0.3s; }
+        .tab-btn.active { background: #FFD700; color: #000; }
+        .list-container { max-height: 400px; overflow-y: auto; padding: 5px; }
+        .list-item {
+            background: #f9f9f9; padding: 10px; border-radius: 8px; margin-bottom: 8px;
+            display: flex; align-items: center; gap: 10px; border-right: 4px solid #ccc;
+            animation: fadeIn 0.5s;
+        }
+        .list-item.winner { border-right-color: #FFD700; background: #fffddf; }
+        .list-item.loser { border-right-color: #E91E63; background: #fff0f5; }
+        .rank { width: 25px; height: 25px; background: #ddd; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; color: #333; }
+        .winner .rank { background: #FFD700; }
+        .loser .rank { background: #E91E63; color: white; }
+        .item-details { flex: 1; }
+        .item-email { font-weight: 700; font-size: 13px; color: #333; direction: ltr; text-align: left; word-break: break-all; }
+        .item-time { font-size: 11px; color: #777; }
+        .empty-msg { text-align: center; color: #999; padding: 20px; }
+
+        /* صورة البنت (الأفاتار) - z-index عالي جداً لتكون فوق الجميع */
+        .girl-avatar {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 100; /* فوق صورة الولد التي z-index لها 1 */
+            text-align: center;
+        }
+        .avatar-speech {
+            background: white; padding: 8px 15px; border-radius: 15px;
+            font-size: 14px; font-weight: 700; color: #E91E63;
+            margin-bottom: 5px; box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            position: relative;
+        }
+        .avatar-speech::after {
+            content: ''; position: absolute; bottom: -6px; left: 50%;
+            transform: translateX(-50%); border-width: 6px 6px 0;
+            border-style: solid; border-color: white transparent transparent;
+        }
+        .avatar-img {
+            width: 80px; height: 80px; border-radius: 50%;
+            border: 3px solid #FFD700; object-fit: cover;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            animation: floatAvatar 3s ease-in-out infinite;
+            background-color: #fff; /* خلفية بيضاء لو الصورة تعطلت */
+        }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes floatAvatar { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+
+        /* Confetti */
+        .confetti { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1000; }
+        .confetti-piece { position: absolute; width: 10px; height: 10px; background: #FFD700; top: -10px; animation: fall 3s linear forwards; }
+        @keyframes fall { to { transform: translateY(100vh) rotate(720deg); opacity: 0; } }
+
+        @media (max-width: 768px) {
+            .kids-left { width: 30%; opacity: 0.3; left: -10%; }
+            .kids-right { width: 30%; opacity: 0.3; right: -10%; }
+            .main-container { padding: 10px; }
+            .store-logo h1 { font-size: 32px; }
+            .side-logo { width: 60px; height: 60px; }
+            .cards-layout { flex-direction: column; align-items: center; }
+            .girl-avatar { bottom: 10px; }
+            .avatar-img { width: 60px; height: 60px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="stars" id="stars"></div>
+
+    <button id="backToAdminBtn" class="admin-back-float" onclick="exitPreview()">🔙 العودة للتحكم</button>
+
+    <!-- صور الزينة (خلفية) -->
+    <img id="leftKidImg" src="https://z-cdn-media.chatglm.cn/files/c76c8ceb-ceab-4a66-8e97-46da1fd6ab2e.png?auth_key=1872976995-e53a945a979c4a1bba9d0905eff22ba4-0-083868dd112e2305577ea81b5f6m20f0" class="kids-bg-image kids-left" alt="تزيين">
+    <img id="rightKidImg" src="https://z-cdn-media.chatglm.cn/files/97f86657-e207-4125-a182-a4b5070ff2b0.png?auth_key=1872976995-e86e189ca6c041e69cb619d6bd101b70-0-213f22165f9f3348a27e05eb040c7dcf" class="kids-bg-image kids-right" alt="تزيين">
+
+    <div class="main-container">
+        
+        <div class="store-logo">
+            <div class="logo-row">
+                <img id="logoImg1" src="https://z-cdn-media.chatglm.cn/files/84523ff9-dc22-49f3-9d85-3e81dc564508.jpg?auth_key=1872977513-8d362d72f17e44f09c89847e9a68418a-0-25b684bd51b90ffd54a38b6ec6a7db3c" alt="Logo" class="side-logo">
+                <div class="main-title-wrapper">
+                    <h1 id="storeTitle">متجر ديمة</h1>
+                </div>
+                <img id="logoImg2" src="https://z-cdn-media.chatglm.cn/files/84523ff9-dc22-49f3-9d85-3e81dc564508.jpg?auth_key=1872977513-8d362d72f17e44f09c89847e9a68418a-0-25b684bd51b90ffd54a38b6ec6a7db3c" alt="Logo" class="side-logo">
+            </div>
+            <p class="subtitle" id="storeSubtitle">✨ أهلاً بكم في مسابقة الحظ ✨</p>
+        </div>
+
+        <div class="status-bar">
+            <div class="status-item">اليوم: <span class="day-badge" id="currentDay">1</span></div>
+            <div class="status-item">المقاعد المتبقية: <span id="spotsLeft">10</span></div>
+        </div>
+
+        <div class="cards-layout">
+            <div class="card" id="mainCard"></div>
+
+            <div class="lists-panel">
+                <div class="panel-title">🏆 سجل المشاركين</div>
+                <div class="tabs">
+                    <button class="tab-btn active" onclick="switchTab('winners')">الفائزين ( <span id="winCount">0</span> )</button>
+                    <button class="tab-btn" onclick="switchTab('losers')">حظ أوفر ( <span id="loseCount">0</span> )</button>
+                </div>
+                <div class="list-container" id="listDisplay"></div>
+                <div class="links-section">
+                    <p>للتواصل: أبو ديمة</p>
+                    <div class="social-links" id="socialLinksContainer">
+                        <!-- Links will be injected here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- صورة البنت الشخصية (فوق الجميع) -->
+    <div class="girl-avatar">
+        <div class="avatar-speech" id="avatarSpeech">مرحباً بك!</div>
+        <img id="avatarImg" src="https://z-cdn-media.chatglm.cn/files/c76c8ceb-ceab-4a66-8e97-46da1fd6ab2e.png?auth_key=1872976995-e53a945a979c4a1bba9d0905eff22ba4-0-083868dd112e2305577ea81b5f6m20f0" class="avatar-img" alt="Avatar">
+    </div>
+
+    <div class="confetti" id="confettiContainer"></div>
+
+    <script>
+        const ADMIN_EMAIL = "o.hadeed23@gmail.com";
+        const DB_KEY = 'dima_comp_db_v10'; 
+        const SETTINGS_KEY = 'dima_settings_v5';
+        
+        let currentWheelRotation = 0;
+        let bgMusic = new Audio();
+        let isMuted = false; 
+        let isAdminPreview = false; 
+
+        const defaultSettings = {
+            storeName: "متجر ديمة",
+            subtitle: "✨ أهلاً بكم في مسابقة الحظ ✨",
+            whatsappLink: "https://wa.me/9647707423328",
+            instagramLink: "https://www.instagram.com/dima_store_21",
+            facebookLink: "https://www.facebook.com/share/1FtZYFGfjd/",
+            winSoundData: null,
+            images: {
+                logo: "https://z-cdn-media.chatglm.cn/files/84523ff9-dc22-49f3-9d85-3e81dc564508.jpg?auth_key=1872977513-8d362d72f17e44f09c89847e9a68418a-0-25b684bd51b90ffd54a38b6ec6a7db3c",
+                leftKid: "https://z-cdn-media.chatglm.cn/files/c76c8ceb-ceab-4a66-8e97-46da1fd6ab2e.png?auth_key=1872976995-e53a945a979c4a1bba9d0905eff22ba4-0-083868dd112e2305577ea81b5f6m20f0",
+                rightKid: "https://z-cdn-media.chatglm.cn/files/97f86657-e207-4125-a182-a4b5070ff2b0.png?auth_key=1872976995-e86e189ca6c041e69cb619d6bd101b70-0-213f22165f9f3348a27e05eb040c7dcf",
+                avatar: "https://z-cdn-media.chatglm.cn/files/c76c8ceb-ceab-4a66-8e97-46da1fd6ab2e.png?auth_key=1872976995-e53a945a979c4a1bba9d0905eff22ba4-0-083868dd112e2305577ea81b5f6m20f0"
+            }
+        };
+
+        function getDB() {
+            let data = localStorage.getItem(DB_KEY);
+            if (!data) {
+                const initial = {
+                    day: 1,
+                    winners: [],
+                    losers: [],
+                    allEmails: [],
+                    date: new Date().toDateString(),
+                    config: { maxWinners: 10, totalDays: 3 }
+                };
+                localStorage.setItem(DB_KEY, JSON.stringify(initial));
+                return initial;
+            }
+            return JSON.parse(data);
+        }
+
+        function saveDB(data) { localStorage.setItem(DB_KEY, JSON.stringify(data)); }
+        
+        function getSettings() {
+            let s = localStorage.getItem(SETTINGS_KEY);
+            if (!s) return {...defaultSettings};
+            try {
+                const saved = JSON.parse(s);
+                // دمج الإعدادات المحفوظة مع الافتراضيات لضمان وجود جميع الحقول
+                return {...defaultSettings, ...saved, images: {...defaultSettings.images, ...(saved.images || {})}};
+            } catch (e) {
+                return {...defaultSettings};
+            }
+        }
+        
+        // دالة حفظ آمنة مع التحقق من المساحة
+        function saveSettings(s) {
+            try {
+                localStorage.setItem(SETTINGS_KEY, JSON.stringify(s));
+                return true;
+            } catch (e) {
+                alert("⚠️ خطأ: مساحة التخزين ممتلئة! لا يمكن حفظ الملفات الكبيرة.\nيرجى استخدام ملفات أصغر حجماً (صور وصوت).\nالإعدادات النصية تم حفظها، لكن الملفات الثقيلة قد تم رفضها.");
+                console.error("Storage Full Error", e);
+                return false;
+            }
+        }
+
+        function getSession() { return localStorage.getItem('dima_user_session'); }
+        function setSession(email) { localStorage.setItem('dima_user_session', email); }
+        function clearSession() { localStorage.removeItem('dima_user_session'); }
+
+        function checkDay() {
+            let db = getDB();
+            const today = new Date().toDateString();
+            if (db.date !== today) {
+                const diffTime = Math.abs(new Date(today) - new Date(db.date));
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+                db.day += diffDays;
+                if (db.day > db.config.totalDays) db.day = db.config.totalDays;
+                db.date = today;
+                saveDB(db);
+            }
+        }
+
+        function loadImages() {
+            const s = getSettings();
+            if (s.images) {
+                if (s.images.logo) { document.getElementById('logoImg1').src = s.images.logo; document.getElementById('logoImg2').src = s.images.logo; }
+                if (s.images.leftKid) document.getElementById('leftKidImg').src = s.images.leftKid;
+                if (s.images.rightKid) document.getElementById('rightKidImg').src = s.images.rightKid;
+                if (s.images.avatar) document.getElementById('avatarImg').src = s.images.avatar;
+            }
+        }
+
+        function loadTexts() {
+            const s = getSettings();
+            document.getElementById('storeTitle').innerText = s.storeName;
+            document.getElementById('storeSubtitle').innerText = s.subtitle;
+            
+            const linksContainer = document.getElementById('socialLinksContainer');
+            linksContainer.innerHTML = `
+                <a href="${s.whatsappLink}" target="_blank" class="social-link whatsapp">واتساب</a>
+                <a href="${s.facebookLink}" target="_blank" class="social-link facebook">فيسبوك</a>
+                <a href="${s.instagramLink}" target="_blank" class="social-link instagram">انستغرام</a>
+            `;
+        }
+
+        function loadSound() {
+            const s = getSettings();
+            if (s.winSoundData) {
+                bgMusic.src = s.winSoundData;
+                bgMusic.load();
+            }
+        }
+
+        function initUI() {
+            checkDay();
+            loadImages();
+            loadTexts();
+            loadSound(); 
+            
+            const db = getDB();
+            const user = getSession();
+
+            document.getElementById('currentDay').innerText = db.day;
+            const winnersToday = db.winners.filter(w => w.day === db.day).length;
+            const spots = db.config.maxWinners - winnersToday;
+            document.getElementById('spotsLeft').innerText = spots > 0 ? spots : 0;
+            updateLists();
+
+            const backBtn = document.getElementById('backToAdminBtn');
+            if (isAdminPreview) {
+                backBtn.style.display = 'block';
+            } else {
+                backBtn.style.display = 'none';
+            }
+
+            if (user && !isAdminPreview) {
+                if (user === ADMIN_EMAIL) {
+                    renderAdminPanel(); 
+                } else {
+                    if (db.day > db.config.totalDays) renderCompetitionEnded();
+                    else if (spots <= 0) renderDayFull();
+                    else if (db.allEmails.includes(user)) renderAlreadyPlayed(user);
+                    else renderGame(user, false);
+                }
+            } else {
+                if (db.day > db.config.totalDays) renderCompetitionEnded();
+                else if (spots <= 0) renderDayFull();
+                else if (user && isAdminPreview && db.allEmails.includes(user)) renderAlreadyPlayed(user);
+                else if (user && isAdminPreview) renderGame(user, true);
+                else renderLoginForm();
+            }
+        }
+
+        function renderLoginForm() {
+            const card = document.getElementById('mainCard');
+            card.className = 'card';
+            card.innerHTML = `
+                <div class="card-title">تسجيل المشاركة</div>
+                <div class="form-group">
+                    <label>البريد الإلكتروني (Gmail فقط):</label>
+                    <input type="email" id="emailInput" placeholder="example@gmail.com" autocomplete="off">
+                    <div class="error-msg" id="errMsg"></div>
+                </div>
+                <button class="spin-btn" onclick="login()">دخول</button>
+            `;
+            speak("أدخل بريدك الإلكتروني للبدء!");
+        }
+
+        function renderGame(email, isAdmin) {
+            const card = document.getElementById('mainCard');
+            card.className = 'card';
+            currentWheelRotation = 0;
+
+            const welcomeClass = isAdmin ? 'user-welcome admin-welcome' : 'user-welcome';
+            const backBtn = isAdmin && !isAdminPreview ? `<button class="logout-btn back-btn" onclick="initUI()">🔙 لوحة التحكم</button>` : '';
+            const welcomeText = isAdmin ? (isAdminPreview ? `وضع المعاينة` : `وضع التجربة (آدمن)`) : email;
+            const logoutBtn = isAdmin ? '' : `<button class="logout-btn" onclick="logout()">تغيير</button>`;
+            
+            let muteBtnHTML = '';
+            if (!isAdmin) {
+                muteBtnHTML = `<button class="audio-control-btn" onclick="toggleMute()" id="muteBtn" title="تشغيل/إيقاف الصوت">🔊</button>`;
+            }
+
+            card.innerHTML = `
+                ${muteBtnHTML}
+                <div class="card-title">🎡 عجلة الحظ</div>
+                <div class="${welcomeClass}">
+                    <span class="user-email">${welcomeText}</span>
+                    ${backBtn}
+                    ${logoutBtn}
+                </div>
+                
+                <div class="wheel-wrapper">
+                    <div class="wheel-container">
+                        <div id="wheel">
+                            <div class="section-win"><span class="wheel-text">🎉 ربحت</span></div>
+                            <div class="section-try"><span class="wheel-text">حظ أوفر</span></div>
+                            <div class="wheel-center">🎁</div>
+                        </div>
+                        <div id="pointer"></div>
+                        <div class="wheel-frame"></div>
+                    </div>
+                    <button class="spin-btn" id="spinBtn" onclick="spin()">أدر العجلة</button>
+                </div>
+                
+                <div class="result-box" id="resultBox">${isAdmin ? "أنت في وضع التجربة، العدد مفتوح" : "لديك فرصة واحدة فقط!"}</div>
+            `;
+            speak("أدر العجلة وحاول حظك!");
+            
+            if (!isAdmin) {
+                playBackgroundMusicOnce();
+            }
+        }
+
+        function renderAdminPanel() {
+            const db = getDB();
+            const s = getSettings();
+            const card = document.getElementById('mainCard');
+            card.className = 'card admin-panel';
+            
+            card.innerHTML = `
+                <div class="admin-header">🛠️ لوحة تحكم الآدمن</div>
+                
+                <div class="admin-grid">
+                    
+                    <div class="admin-section">
+                        <div class="admin-section-title">الإعدادات العامة</div>
+                        
+                        <div class="admin-input-group">
+                            <label>اسم المتجر (العنوان الرئيسي)</label>
+                            <input type="text" id="inputStoreName" value="${s.storeName}">
+                        </div>
+                        
+                        <div class="admin-input-group">
+                            <label>النص الترحيبي (أسفل العنوان)</label>
+                            <input type="text" id="inputSubtitle" value="${s.subtitle}">
+                        </div>
+
+                        <div class="admin-input-group">
+                            <label>عدد الفائزين في اليوم</label>
+                            <input type="number" id="maxWinnersInput" value="${db.config.maxWinners}">
+                        </div>
+                        
+                        <div class="admin-input-group">
+                            <label>عدد أيام المسابقة</label>
+                            <input type="number" id="totalDaysInput" value="${db.config.totalDays}">
+                        </div>
+                    </div>
+
+                    <div class="admin-section">
+                        <div class="admin-section-title">روابط التواصل</div>
+                        
+                        <div class="admin-input-group">
+                            <label>رابط الواتساب</label>
+                            <input type="text" id="inputWhatsapp" value="${s.whatsappLink}">
+                        </div>
+                        
+                        <div class="admin-input-group">
+                            <label>رابط الانستغرام</label>
+                            <input type="text" id="inputInstagram" value="${s.instagramLink}">
+                        </div>
+                        
+                        <div class="admin-input-group">
+                            <label>رابط الفيسبوك</label>
+                            <input type="text" id="inputFacebook" value="${s.facebookLink}">
+                        </div>
+                    </div>
+
+                    <button class="admin-btn btn-save" onclick="saveConfig()">💾 حفظ الإعدادات والنصوص</button>
+                    
+                    <button class="admin-btn btn-preview" onclick="previewSite()">👀 معاينة الموقع (كزائر)</button>
+
+                    <div class="admin-section">
+                        <div class="admin-section-title">الصور والصوت (انتبه للحجم)</div>
+                        
+                        <div class="admin-input-group">
+                            <label>موسيقى الخلفية (تشتغل عند الدخول)</label>
+                            <input type="file" id="soundFile" accept="audio/*" style="display:none" onchange="uploadSound(this)">
+                            <button class="admin-btn btn-upload" onclick="document.getElementById('soundFile').click()">🔈 رفع موسيقى الخلفية</button>
+                            <span class="admin-input-hint">ملاحظة: يجب أن يكون الملف صغيراً جداً (يفضل أقل من 500KB) لضمان حفظه في المتصفح.</span>
+                        </div>
+
+                        <div class="admin-input-group">
+                            <label>الشعار (دائري)</label>
+                            <input type="file" id="logoFile" accept="image/*" style="display:none" onchange="uploadImage('logo', this)">
+                            <button class="admin-btn btn-upload" onclick="document.getElementById('logoFile').click()">📷 تغيير الشعار</button>
+                        </div>
+
+                        <div class="admin-input-group">
+                            <label>الصورة الشخصية (البنت المتحركة)</label>
+                            <input type="file" id="avatarFile" accept="image/*" style="display:none" onchange="uploadImage('avatar', this)">
+                            <button class="admin-btn btn-upload" onclick="document.getElementById('avatarFile').click()">📷 تغيير الصورة الشخصية</button>
+                        </div>
+
+                        <div class="admin-input-group">
+                            <label>صورة الزينة (يسار)</label>
+                            <input type="file" id="leftFile" accept="image/*" style="display:none" onchange="uploadImage('leftKid', this)">
+                            <button class="admin-btn btn-upload" onclick="document.getElementById('leftFile').click()">📷 تغيير صورة البنت</button>
+                        </div>
+
+                        <div class="admin-input-group">
+                            <label>صورة الزينة (يمين)</label>
+                            <input type="file" id="rightFile" accept="image/*" style="display:none" onchange="uploadImage('rightKid', this)">
+                            <button class="admin-btn btn-upload" onclick="document.getElementById('rightFile').click()">📷 تغيير صورة الولد</button>
+                        </div>
+                    </div>
+
+                    <button class="admin-btn btn-test" onclick="enterTestMode()">🎮 تجربة اللعبة (دخول كآدمن)</button>
+                    
+                    <button class="admin-btn btn-reset-soft" onclick="resetCounters()">🗑️ تصفير العدادات فقط (المشاركين)</button>
+                    <button class="admin-btn btn-reset" onclick="resetCompetition()">⚠️ تصفير كامل (حذف كل شيء)</button>
+
+                </div>
+                <button class="logout-btn" style="width:100%; margin-top:15px; background:#333" onclick="logout()">تسجيل الخروج</button>
+            `;
+            speak("مرحباً بك يا مدير!");
+        }
+
+        function renderAlreadyPlayed(email) {
+            const card = document.getElementById('mainCard');
+            card.className = 'card';
+            const db = getDB();
+            let msg = "";
+            let boxClass = "";
+
+            if (db.winners.some(w => w.email === email)) {
+                msg = "🎉 لقد كنت من الفائزين! مبروك!";
+                boxClass = "win";
+            } else {
+                msg = "😢 لقد شاركت سابقاً. نتمنى لك حظاً أوفر!";
+                boxClass = "lose";
+            }
+
+            card.innerHTML = `
+                <div class="card-title">حالة المشاركة</div>
+                <div class="user-welcome">
+                    <span class="user-email">${email}</span>
+                    ${isAdminPreview ? '' : '<button class="logout-btn" onclick="logout()">خروج</button>'}
+                </div>
+                <div class="result-box ${boxClass}">${msg}</div>
+            `;
+            speak(msg);
+        }
+
+        function renderDayFull() {
+            document.getElementById('mainCard').innerHTML = `
+                <div class="card-title">😫 اكتمل العدد</div>
+                <div class="result-box lose">عذراً، لقد اكتمل عدد الفائزين لهذا اليوم.<br>انتظر الغد للمحاولة مجدداً!</div>
+            `;
+            speak("عذراً، اكتمل عدد الفائزين.");
+        }
+
+        function renderCompetitionEnded() {
+            document.getElementById('mainCard').innerHTML = `
+                <div class="card-title">انتهت المسابقة</div>
+                <div class="result-box">شكراً لمشاركتكم في مسابقة متجر ديمة!<br>🎉🎉🎉</div>
+            `;
+            speak("انتهت المسابقة!");
+        }
+
+        function login() {
+            const input = document.getElementById('emailInput');
+            const err = document.getElementById('errMsg');
+            const email = input.value.trim().toLowerCase();
+
+            if (!email.match(/^[a-zA-Z0-9._%+-]+@gmail\.com$/)) {
+                err.textContent = "الرجاء إدخال بريد Gmail صالح.";
+                err.style.display = "block";
+                return;
+            }
+
+            const db = getDB();
+            if (!isAdminPreview && db.allEmails.includes(email)) {
+                err.textContent = "هذا البريد شارك سابقاً.";
+                err.style.display = "block";
+                return;
+            }
+
+            setSession(email);
+            initUI();
+        }
+
+        function logout() {
+            clearSession();
+            isAdminPreview = false;
+            stopMusic(); 
+            initUI();
+        }
+        
+        function enterTestMode() {
+            renderGame(ADMIN_EMAIL, true);
+        }
+
+        function previewSite() {
+            isAdminPreview = true;
+            clearSession(); 
+            initUI();
+        }
+
+        function exitPreview() {
+            isAdminPreview = false;
+            setSession(ADMIN_EMAIL); 
+            initUI();
+        }
+        
+        // --- Audio Functions ---
+        function playBackgroundMusicOnce() {
+            if (!bgMusic.src) return;
+            if (!bgMusic.paused) return;
+
+            bgMusic.loop = false; 
+            
+            bgMusic.play().then(() => {
+                isMuted = false;
+                updateMuteIcon();
+                const btn = document.getElementById('muteBtn');
+                if(btn) btn.classList.add('playing');
+            }).catch(error => {
+                console.log("Autoplay prevented:", error);
+                isMuted = true;
+                updateMuteIcon();
+            });
+        }
+
+        function toggleMute() {
+            if (!bgMusic.src) return;
+            
+            if (bgMusic.paused) {
+                bgMusic.play().then(() => {
+                    isMuted = false;
+                    updateMuteIcon();
+                }).catch(e => console.log(e));
+            } else {
+                bgMusic.pause();
+                isMuted = true;
+                updateMuteIcon();
+            }
+        }
+
+        function stopMusic() {
+            bgMusic.pause();
+            bgMusic.currentTime = 0;
+            isMuted = true;
+            updateMuteIcon();
+        }
+
+        function updateMuteIcon() {
+            const btn = document.getElementById('muteBtn');
+            if (btn) {
+                btn.innerHTML = isMuted ? '🔇' : '🔊';
+                if(isMuted) btn.classList.remove('playing');
+                else btn.classList.add('playing');
+            }
+        }
+
+        function spin() {
+            const btn = document.getElementById('spinBtn');
+            btn.disabled = true;
+            
+            const wheel = document.getElementById('wheel');
+            
+            const extraSpins = 5 * 360; 
+            const randomAngle = Math.floor(Math.random() * 360);
+            
+            currentWheelRotation += (extraSpins + randomAngle);
+            wheel.style.transform = `rotate(${currentWheelRotation}deg)`;
+
+            setTimeout(() => {
+                const finalDeg = currentWheelRotation % 360;
+                const isWinner = (finalDeg > 270 || finalDeg < 90);
+                processResult(isWinner);
+            }, 5000);
+        }
+
+        function processResult(isWinner) {
+            const email = getSession();
+            const isAdmin = (email === ADMIN_EMAIL) || isAdminPreview;
+            const resultBox = document.getElementById('resultBox');
+            const spinBtn = document.getElementById('spinBtn');
+
+            if (isAdmin) {
+                if (isWinner) {
+                    resultBox.className = "result-box win";
+                    resultBox.innerHTML = "🎊 (تجربة) مبروك!";
+                    createConfetti();
+                } else {
+                    resultBox.className = "result-box lose";
+                    resultBox.innerHTML = "💔 (تجربة) حظ أوفر!";
+                }
+                speak("تجربة: " + (isWinner ? "فوز" : "خسارة"));
+                spinBtn.disabled = false;
+                spinBtn.innerText = "أدر مجدداً 🔄";
+                return;
+            }
+
+            let db = getDB();
+            
+            if (!db.allEmails.includes(email)) {
+                db.allEmails.push(email);
+            }
+
+            const entry = {
+                email: email,
+                time: new Date().toLocaleTimeString('ar-EG'),
+                day: db.day
+            };
+
+            let winnersToday = db.winners.filter(w => w.day === db.day).length;
+
+            if (isWinner && winnersToday < db.config.maxWinners) {
+                db.winners.push(entry);
+                resultBox.className = "result-box win";
+                resultBox.innerHTML = "🎊 مبروك! لقد ربحت!";
+                speak("مبروك! أنت فائز!");
+                createConfetti();
+            } else {
+                db.losers.push(entry);
+                resultBox.className = "result-box lose";
+                if (isWinner && winnersToday >= db.config.maxWinners) {
+                     resultBox.innerHTML = "أدفأت العجلة على الفوز، لكن المقاعد اكتملت!";
+                } else {
+                     resultBox.innerHTML = "💔 حظ أوفر! نتمنى لك التوفيق.";
+                }
+                speak("حظ أوفر!");
+            }
+
+            saveDB(db);
+            updateLists();
+            updateSpots();
+            
+            spinBtn.style.display = 'none';
+        }
+
+        function saveConfig() {
+            let db = getDB();
+            let s = getSettings();
+            
+            db.config.maxWinners = parseInt(document.getElementById('maxWinnersInput').value) || 10;
+            db.config.totalDays = parseInt(document.getElementById('totalDaysInput').value) || 3;
+            saveDB(db);
+            
+            s.storeName = document.getElementById('inputStoreName').value;
+            s.subtitle = document.getElementById('inputSubtitle').value;
+            s.whatsappLink = document.getElementById('inputWhatsapp').value;
+            s.instagramLink = document.getElementById('inputInstagram').value;
+            s.facebookLink = document.getElementById('inputFacebook').value;
+            
+            // حفظ الإعدادات مع الحفاظ على الموسيقى والصور (لأننا قرأنا s من getSettings سابقاً)
+            if(saveSettings(s)) {
+                loadTexts();
+                alert("تم حفظ الإعدادات بنجاح!");
+            }
+        }
+
+        function resetCounters() {
+            if(confirm("هل أنت متأكد من تصفير العدادات؟ سيتم حذف قوائم الفائزين والمشاركين، مع الإبقاء على الصور والإعدادات.")) {
+                let db = getDB();
+                db.winners = [];
+                db.losers = [];
+                db.allEmails = [];
+                db.day = 1;
+                saveDB(db);
+                alert("تم تصفير العدادات.");
+                initUI();
+            }
+        }
+
+        function resetCompetition() {
+            if(confirm("⚠️ تحذير! سيتم حذف جميع البيانات (الفائزين، الخاسرين، الإعدادات، الصور) وإرجاع كل شيء للوضع الافتراضي.")) {
+                localStorage.removeItem(DB_KEY);
+                localStorage.removeItem(SETTINGS_KEY);
+                alert("تم التصفيــــة الكاملة.");
+                location.reload();
+            }
+        }
+        
+        function uploadSound(input) {
+            if (input.files && input.files[0]) {
+                const file = input.files[0];
+                // تنبيه مبكر قبل المحاولة
+                if (file.size > 1000000) { // 1MB
+                     alert("تحذير شديد: الملف كبير جداً (" + (file.size/1024/1024).toFixed(2) + "MB).\nالمتصفح قد يرفض حفظه!\nيرجى اختيار ملف صوتي صغير جداً (مثلاً.mp3 بجودة منخفضة).");
+                }
+                
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                    let s = getSettings(); // نجلب الإعدادات الحالية (تحتوي على الصور وغيره)
+                    s.winSoundData = e.target.result; // نحدث الصوت فقط
+                    if(saveSettings(s)) { // نحاول الحفظ
+                        bgMusic.src = e.target.result;
+                        bgMusic.load(); 
+                        alert("تم رفع وحفظ موسيقى الخلفية بنجاح!");
+                    }
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function uploadImage(type, input) {
+            if (input.files && input.files[0]) {
+                const file = input.files[0];
+                 if (file.size > 1000000) { // 1MB
+                     alert("تحذير: الصورة كبيرة قليلاً. يفضل استخدام صور أصغر لحفظ سرعة الموقع وضمان حفظ البيانات.");
+                }
+
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                    let s = getSettings();
+                    if(!s.images) s.images = {};
+                    s.images[type] = e.target.result;
+                    if(saveSettings(s)) {
+                        loadImages();
+                        alert("تم تحديث الصورة بنجاح!");
+                    }
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function updateLists() {
+            const db = getDB();
+            const winnersList = db.winners.filter(w => w.day === db.day);
+            const losersList = db.losers.filter(l => l.day === db.day);
+            document.getElementById('winCount').innerText = winnersList.length;
+            document.getElementById('loseCount').innerText = losersList.length;
+            displayList('winners');
+        }
+
+        function displayList(type) {
+            const container = document.getElementById('listDisplay');
+            const db = getDB();
+            const list = type === 'winners' ? db.winners.filter(w => w.day === db.day) : db.losers.filter(l => l.day === db.day);
+
+            if (list.length === 0) {
+                container.innerHTML = `<div class="empty-msg">لا يوجد مشاركين بعد.</div>`;
+                return;
+            }
+
+            let html = '';
+            list.forEach((item, index) => {
+                html += `
+                    <div class="list-item ${type === 'winners' ? 'winner' : 'loser'}">
+                        <div class="rank">${index + 1}</div>
+                        <div class="item-details">
+                            <div class="item-email">${item.email}</div>
+                            <div class="item-time">${item.time}</div>
+                        </div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        function switchTab(type) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            displayList(type);
+        }
+
+        function updateSpots() {
+            const db = getDB();
+            const count = db.winners.filter(w => w.day === db.day).length;
+            const left = db.config.maxWinners - count;
+            document.getElementById('spotsLeft').innerText = left > 0 ? left : 0;
+        }
+
+        function speak(text) { document.getElementById('avatarSpeech').innerText = text; }
+
+        function createConfetti() {
+            const container = document.getElementById('confettiContainer');
+            for (let i = 0; i < 50; i++) {
+                const piece = document.createElement('div');
+                piece.className = 'confetti-piece';
+                piece.style.left = Math.random() * 100 + 'vw';
+                piece.style.background = ['#FFD700', '#E91E63', '#4CAF50', '#2196F3'][Math.floor(Math.random() * 4)];
+                piece.style.animationDuration = (Math.random() * 2 + 2) + 's';
+                container.appendChild(piece);
+                setTimeout(() => piece.remove(), 5000);
+            }
+        }
+
+        function createStars() {
+            const container = document.getElementById('stars');
+            for (let i = 0; i < 50; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                star.style.left = Math.random() * 100 + '%';
+                star.style.top = Math.random() * 100 + '%';
+                star.style.width = Math.random() * 3 + 'px';
+                star.style.height = star.style.width;
+                container.appendChild(star);
+            }
+        }
+
+        createStars();
+        initUI();
+    </script>
+</body>
+</html>
+```
